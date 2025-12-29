@@ -1,4 +1,8 @@
-﻿#include <windows.h>
+﻿// ===========================================================
+// brad dansator 3D + RADIO + COLLISION (copy-paste full file)
+// ===========================================================
+
+#include <windows.h>
 #include <mmsystem.h>
 #pragma comment(lib, "winmm.lib")
 
@@ -50,7 +54,6 @@ void playMusic()
     mciSendStringA("play music repeat", NULL, 0, NULL);
 }
 
-
 // ===========================================================
 // CAMERA AND MOVEMENT
 // ===========================================================
@@ -68,6 +71,26 @@ float jumpSpeed = 0.0f;
 float gravity = -0.015f;
 
 float danceT = 0.0f;
+
+// ===========================================================
+// RADIO (position + collision)
+// ===========================================================
+
+float radioX = 6.0f;
+float radioY = 0.0f;
+float radioZ = 0.0f;
+
+// collision radii (tweak if needed)
+float radioRadius = 2.2f; // "size" of radio for collision
+float bradRadius  = 2.0f; // "size" of tree for collision
+
+bool collidesWithRadio(float newX, float newY)
+{
+    float dx = newX - radioX;
+    float dy = newY - radioY;
+    float dist = std::sqrt(dx * dx + dy * dy);
+    return dist < (radioRadius + bradRadius);
+}
 
 // ===========================================================
 // LIGHTING
@@ -108,6 +131,58 @@ void drawGround()
 }
 
 // ===========================================================
+// RADIO DRAW
+// ===========================================================
+
+void drawRadio()
+{
+    // Radio body (cube scaled)
+    glPushMatrix();
+    glTranslatef(radioX, radioY, radioZ + 1.0f);
+
+    glColor3f(0.18f, 0.18f, 0.18f);
+    glScalef(3.0f, 1.5f, 2.0f);
+    glutSolidCube(1.0f);
+    glPopMatrix();
+
+    // Speaker (front)
+    glPushMatrix();
+    glTranslatef(radioX + 1.15f, radioY, radioZ + 1.0f);
+    glColor3f(0.05f, 0.05f, 0.05f);
+    glRotatef(90, 1, 0, 0);
+    glutSolidTorus(0.08f, 0.35f, 16, 24);
+    glPopMatrix();
+
+    // Knob
+    glPushMatrix();
+    glTranslatef(radioX - 1.2f, radioY + 0.55f, radioZ + 1.2f);
+    glColor3f(0.75f, 0.75f, 0.75f);
+    glutSolidSphere(0.20f, 20, 20);
+    glPopMatrix();
+
+    // Antenna
+    glDisable(GL_LIGHTING);
+    glColor3f(0.2f, 0.2f, 0.2f);
+    glBegin(GL_LINES);
+    glVertex3f(radioX - 1.2f, radioY - 0.2f, radioZ + 2.0f);
+    glVertex3f(radioX - 2.2f, radioY - 0.7f, radioZ + 4.2f);
+    glEnd();
+    glEnable(GL_LIGHTING);
+
+    // (Optional) collision debug ring on ground
+    // glDisable(GL_LIGHTING);
+    // glColor3f(1, 0, 0);
+    // glBegin(GL_LINE_LOOP);
+    // for (int i = 0; i < 64; i++)
+    // {
+    //     float a = i * 2.0f * 3.14159f / 64.0f;
+    //     glVertex3f(radioX + std::cos(a) * radioRadius, radioY + std::sin(a) * radioRadius, 0.01f);
+    // }
+    // glEnd();
+    // glEnable(GL_LIGHTING);
+}
+
+// ===========================================================
 // FACE
 // ===========================================================
 
@@ -115,17 +190,14 @@ void drawFace()
 {
     glPushMatrix();
 
-    // pozitionarea ochilor
-    float baseZ = 7.4f;        // inaltime
-    float front = 1.25f;       // cat ies din brad
+    float baseZ = 7.4f;
+    float front = 1.25f;
 
-    float eyeSize = 0.60f;     // ochi mai mari
-    float irisSize = 0.38f;    // iris vizibil
-    float pupilSize = 0.22f;   // pupila proportionala
+    float eyeSize = 0.60f;
+    float irisSize = 0.38f;
+    float pupilSize = 0.22f;
 
-    // ===============================
-    // OCHI (SCLERA)
-    // ===============================
+    // eyes
     glColor3f(1, 1, 1);
 
     glPushMatrix();
@@ -140,15 +212,12 @@ void drawFace()
     glutSolidSphere(eyeSize, 32, 32);
     glPopMatrix();
 
-
-    // ===============================
-    // IRIS MARE SI VIZIBIL (MARO)
-    // ===============================
-    glColor3f(0.45f, 0.22f, 0.05f); // maro ca trunchiul
+    // iris
+    glColor3f(0.45f, 0.22f, 0.05f);
 
     glPushMatrix();
     glTranslatef(0.9f, 0.0f, baseZ - 0.10f);
-    glTranslatef(0, front + 0.35f, 0);    // mult mai in fata ca sa se vada clar
+    glTranslatef(0, front + 0.35f, 0);
     glutSolidSphere(irisSize, 32, 32);
     glPopMatrix();
 
@@ -158,10 +227,7 @@ void drawFace()
     glutSolidSphere(irisSize, 32, 32);
     glPopMatrix();
 
-
-    // ===============================
-    // PUPILA
-    // ===============================
+    // pupils
     glColor3f(0, 0, 0);
 
     glPushMatrix();
@@ -176,10 +242,7 @@ void drawFace()
     glutSolidSphere(pupilSize, 32, 32);
     glPopMatrix();
 
-
-    // ===============================
-    // REFLEXIE ALBA
-    // ===============================
+    // highlights
     glColor3f(1, 1, 1);
 
     glPushMatrix();
@@ -194,10 +257,7 @@ void drawFace()
     glutSolidSphere(0.10f, 20, 20);
     glPopMatrix();
 
-
-    // ===============================
-    // GURA
-    // ===============================
+    // mouth
     glColor3f(1.0f, 0.22f, 0.22f);
 
     glPushMatrix();
@@ -210,12 +270,8 @@ void drawFace()
     glPopMatrix();
 }
 
-
-
-
-
 // ===========================================================
-// LIMBS (GOLD TINSEL ARMS)
+// LIMBS
 // ===========================================================
 
 void drawLimbs()
@@ -286,14 +342,13 @@ void drawTree()
 }
 
 // ===========================================================
-// UI: SOUND BAR IN DREAPTA SUS
+// UI: SOUND BAR
 // ===========================================================
-// window size (pentru sound bar)
+
 int winW = 900;
 int winH = 700;
 bool dragVolume = false;
 
-// parametrii barei in pixeli
 const int barWidth = 160;
 const int barHeight = 18;
 
@@ -302,7 +357,6 @@ void drawSoundBar()
     glDisable(GL_LIGHTING);
     glDisable(GL_DEPTH_TEST);
 
-    // trecem in modul 2d
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -318,7 +372,6 @@ void drawSoundBar()
     int x1 = x0 + barWidth;
     int y1 = y0 + barHeight;
 
-    // bara de fundal
     glColor3f(0.3f, 0.3f, 0.3f);
     glBegin(GL_QUADS);
     glVertex2i(x0, y0);
@@ -327,7 +380,6 @@ void drawSoundBar()
     glVertex2i(x0, y1);
     glEnd();
 
-    // volum curent (verde inchis)
     float frac = volumeLevel / 100.0f;
     int xFill = x0 + int(barWidth * frac);
 
@@ -339,7 +391,6 @@ void drawSoundBar()
     glVertex2i(x0, y1);
     glEnd();
 
-    // contur
     glColor3f(0, 0, 0);
     glBegin(GL_LINE_LOOP);
     glVertex2i(x0, y0);
@@ -365,13 +416,11 @@ bool isInsideSoundBar(int mx, int my)
     int x1 = x0 + barWidth;
     int y1 = y0 + barHeight;
 
-    // in glut, originea pentru mouse este sus-stanga
     int yGL = my;
-
     return (mx >= x0 && mx <= x1 && (winH - yGL) >= y0 && (winH - yGL) <= y1);
 }
 
-void updateVolumeFromMouse(int mx, int my)
+void updateVolumeFromMouse(int mx, int /*my*/)
 {
     int margin = 20;
     int x0 = winW - barWidth - margin;
@@ -406,6 +455,7 @@ void display()
         0, 0, 1);
 
     drawGround();
+    drawRadio();   // <-- radio in scene
     drawTree();
     drawSoundBar();
 
@@ -432,21 +482,48 @@ void idle()
         }
     }
 
+    // OPTIONAL: simulate "music coming from radio" by distance attenuation
+    // (still controlled by your volume bar, but quieter when far)
+    if (musicLoaded)
+    {
+        float dx = bradX - radioX;
+        float dy = bradY - radioY;
+        float dist = std::sqrt(dx * dx + dy * dy);
+
+        int attenuated = int(volumeLevel * (1.0f / (1.0f + dist * 0.30f)));
+        if (attenuated < 0) attenuated = 0;
+        if (attenuated > 100) attenuated = 100;
+
+        int mciVol = attenuated * 10;
+        std::string cmd = "setaudio music volume to " + std::to_string(mciVol);
+        mciSendStringA(cmd.c_str(), NULL, 0, NULL);
+    }
+
     glutPostRedisplay();
 }
 
 // ===========================================================
-// KEY NORMAL
+// KEY NORMAL (movement + collision)
 // ===========================================================
 
 void keyNormal(unsigned char key, int, int)
 {
     float speed = 0.3f;
 
-    if (key == 'w' || key == 'W') bradY += speed;
-    if (key == 's' || key == 'S') bradY -= speed;
-    if (key == 'a' || key == 'A') bradX -= speed;
-    if (key == 'd' || key == 'D') bradX += speed;
+    float newX = bradX;
+    float newY = bradY;
+
+    if (key == 'w' || key == 'W') newY += speed;
+    if (key == 's' || key == 'S') newY -= speed;
+    if (key == 'a' || key == 'A') newX -= speed;
+    if (key == 'd' || key == 'D') newX += speed;
+
+    // apply movement only if no collision with radio
+    if (!collidesWithRadio(newX, newY))
+    {
+        bradX = newX;
+        bradY = newY;
+    }
 
     if (key == ' ' && !jumping)
     {
@@ -471,6 +548,7 @@ void keySpecial(int key, int, int)
     if (camPitch > 1.3f) camPitch = 1.3f;
     if (camPitch < -1.3f) camPitch = -1.3f;
 }
+
 // ===========================================================
 // MOUSE (SOUND BAR CONTROL)
 // ===========================================================
@@ -496,6 +574,7 @@ void mouse(int button, int state, int x, int y)
 
 void motion(int x, int y)
 {
+    (void)y;
     if (dragVolume)
     {
         updateVolumeFromMouse(x, y);
@@ -508,6 +587,9 @@ void motion(int x, int y)
 
 void reshape(int w, int h)
 {
+    winW = w;
+    winH = h;
+
     if (h == 0) h = 1;
     float r = float(w) / float(h);
 
@@ -527,7 +609,7 @@ int main(int argc, char** argv)
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(winW, winH);
-    glutCreateWindow("brad dansator 3d");
+    glutCreateWindow("brad dansator 3d + radio");
 
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.6f, 0.9f, 0.95f, 1);
