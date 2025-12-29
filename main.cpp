@@ -1,445 +1,70 @@
-﻿// ===========================================================
-// brad dansator 3D + RADIO + COLLISION (copy-paste full file)
-// ===========================================================
-
-#include <windows.h>
-#include <mmsystem.h>
-#pragma comment(lib, "winmm.lib")
-
+﻿// main.cpp
+#include <algorithm>
 #include <gl/freeglut.h>
-#include <iostream>
-#include <fstream>
 #include <cmath>
 #include <string>
+#include <cstdlib>
 
-// ===========================================================
-// MUSIC SYSTEM
-// ===========================================================
-
-int volumeLevel = 10;   // 0..100
-bool musicLoaded = false;
-
-void setMusicVolume()
+struct MusicNote
 {
-    if (!musicLoaded) return;
+    float x, y, z;
+    float phase;
+    bool active;
+};
 
-    int mciVol = volumeLevel * 10; // 0..1000
-    std::string cmd = "setaudio music volume to " + std::to_string(mciVol);
-    mciSendStringA(cmd.c_str(), NULL, 0, NULL);
+extern MusicNote musicNote;
+extern int noteCooldown;
+
+
+
+
+extern int winW, winH;
+
+extern float camYaw, camPitch, camDist;
+extern float bradX, bradY, bradZ;
+
+extern bool jumping;
+extern float jumpSpeed, gravity;
+
+extern float danceT;
+
+extern int volumeLevel;
+extern bool musicLoaded;
+
+extern float radioX, radioY;
+extern bool dragVolume;
+
+void setupLight();
+void playMusic();
+void setMusicVolume();
+void setMusicVolumeAttenuated(float dist);
+
+void drawGround();
+void drawRadio();
+void drawTree();
+
+void drawMusicNotes();
+void drawSoundBar();
+
+void keyNormal(unsigned char, int, int);
+void keySpecial(int, int, int);
+void mouse(int, int, int, int);
+void motion(int, int);
+void reshape(int, int);
+
+void spawnMusicNote()
+{
+    if (musicNote.active) return;
+
+    musicNote.x = radioX;
+    musicNote.y = radioY;
+    musicNote.z = 1.5f;
+
+    musicNote.phase = 0.0f;
+    musicNote.active = true;
 }
 
-void playMusic()
-{
-    std::string path = "assets/sounds/brad.mp3";
 
-    std::ifstream f(path);
-    if (!f.good())
-    {
-        std::cout << "[error] audio file not found: " << path << std::endl;
-        return;
-    }
-    f.close();
-
-    mciSendStringA("close music", NULL, 0, NULL);
-
-    std::string cmdOpen = "open \"" + path + "\" type mpegvideo alias music";
-    if (mciSendStringA(cmdOpen.c_str(), NULL, 0, NULL) != 0)
-    {
-        std::cout << "[error] cannot open audio file" << std::endl;
-        return;
-    }
-
-    musicLoaded = true;
-    setMusicVolume();
-    mciSendStringA("play music repeat", NULL, 0, NULL);
-}
-
-// ===========================================================
-// CAMERA AND MOVEMENT
-// ===========================================================
-
-float camYaw = 0.0f;
-float camPitch = 0.3f;
-float camDist = 35.0f;
-
-float bradX = 0.0f;
-float bradY = 0.0f;
-float bradZ = 0.0f;
-
-bool jumping = false;
-float jumpSpeed = 0.0f;
-float gravity = -0.015f;
-
-float danceT = 0.0f;
-
-// ===========================================================
-// RADIO (position + collision)
-// ===========================================================
-
-float radioX = 6.0f;
-float radioY = 0.0f;
-float radioZ = 0.0f;
-
-// collision radii (tweak if needed)
-float radioRadius = 2.2f; // "size" of radio for collision
-float bradRadius  = 2.0f; // "size" of tree for collision
-
-bool collidesWithRadio(float newX, float newY)
-{
-    float dx = newX - radioX;
-    float dy = newY - radioY;
-    float dist = std::sqrt(dx * dx + dy * dy);
-    return dist < (radioRadius + bradRadius);
-}
-
-// ===========================================================
-// LIGHTING
-// ===========================================================
-
-void setupLight()
-{
-    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
-    glEnable(GL_COLOR_MATERIAL);
-
-    GLfloat pos[] = { 5.0f, -5.0f, 10.0f, 1.0f };
-    glLightfv(GL_LIGHT0, GL_POSITION, pos);
-
-    GLfloat diff[] = { 1, 1, 1, 1 };
-    glLightfv(GL_LIGHT0, GL_DIFFUSE, diff);
-
-    glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
-}
-
-// ===========================================================
-// GROUND
-// ===========================================================
-
-void drawGround()
-{
-    glDisable(GL_LIGHTING);
-    glColor3f(0.85f, 0.85f, 0.95f);
-
-    glBegin(GL_QUADS);
-    glVertex3f(-50, -50, 0);
-    glVertex3f(50, -50, 0);
-    glVertex3f(50, 50, 0);
-    glVertex3f(-50, 50, 0);
-    glEnd();
-
-    glEnable(GL_LIGHTING);
-}
-
-// ===========================================================
-// RADIO DRAW
-// ===========================================================
-
-void drawRadio()
-{
-    // Radio body (cube scaled)
-    glPushMatrix();
-    glTranslatef(radioX, radioY, radioZ + 1.0f);
-
-    glColor3f(0.18f, 0.18f, 0.18f);
-    glScalef(3.0f, 1.5f, 2.0f);
-    glutSolidCube(1.0f);
-    glPopMatrix();
-
-    // Speaker (front)
-    glPushMatrix();
-    glTranslatef(radioX + 1.15f, radioY, radioZ + 1.0f);
-    glColor3f(0.05f, 0.05f, 0.05f);
-    glRotatef(90, 1, 0, 0);
-    glutSolidTorus(0.08f, 0.35f, 16, 24);
-    glPopMatrix();
-
-    // Knob
-    glPushMatrix();
-    glTranslatef(radioX - 1.2f, radioY + 0.55f, radioZ + 1.2f);
-    glColor3f(0.75f, 0.75f, 0.75f);
-    glutSolidSphere(0.20f, 20, 20);
-    glPopMatrix();
-
-    // Antenna
-    glDisable(GL_LIGHTING);
-    glColor3f(0.2f, 0.2f, 0.2f);
-    glBegin(GL_LINES);
-    glVertex3f(radioX - 1.2f, radioY - 0.2f, radioZ + 2.0f);
-    glVertex3f(radioX - 2.2f, radioY - 0.7f, radioZ + 4.2f);
-    glEnd();
-    glEnable(GL_LIGHTING);
-
-    // (Optional) collision debug ring on ground
-    // glDisable(GL_LIGHTING);
-    // glColor3f(1, 0, 0);
-    // glBegin(GL_LINE_LOOP);
-    // for (int i = 0; i < 64; i++)
-    // {
-    //     float a = i * 2.0f * 3.14159f / 64.0f;
-    //     glVertex3f(radioX + std::cos(a) * radioRadius, radioY + std::sin(a) * radioRadius, 0.01f);
-    // }
-    // glEnd();
-    // glEnable(GL_LIGHTING);
-}
-
-// ===========================================================
-// FACE
-// ===========================================================
-
-void drawFace()
-{
-    glPushMatrix();
-
-    float baseZ = 7.4f;
-    float front = 1.25f;
-
-    float eyeSize = 0.60f;
-    float irisSize = 0.38f;
-    float pupilSize = 0.22f;
-
-    // eyes
-    glColor3f(1, 1, 1);
-
-    glPushMatrix();
-    glTranslatef(0.9f, 0.0f, baseZ);
-    glTranslatef(0, front, 0);
-    glutSolidSphere(eyeSize, 32, 32);
-    glPopMatrix();
-
-    glPushMatrix();
-    glTranslatef(-0.9f, 0.0f, baseZ);
-    glTranslatef(0, front, 0);
-    glutSolidSphere(eyeSize, 32, 32);
-    glPopMatrix();
-
-    // iris
-    glColor3f(0.45f, 0.22f, 0.05f);
-
-    glPushMatrix();
-    glTranslatef(0.9f, 0.0f, baseZ - 0.10f);
-    glTranslatef(0, front + 0.35f, 0);
-    glutSolidSphere(irisSize, 32, 32);
-    glPopMatrix();
-
-    glPushMatrix();
-    glTranslatef(-0.9f, 0.0f, baseZ - 0.10f);
-    glTranslatef(0, front + 0.35f, 0);
-    glutSolidSphere(irisSize, 32, 32);
-    glPopMatrix();
-
-    // pupils
-    glColor3f(0, 0, 0);
-
-    glPushMatrix();
-    glTranslatef(0.9f, 0.0f, baseZ - 0.12f);
-    glTranslatef(0, front + 0.55f, 0);
-    glutSolidSphere(pupilSize, 32, 32);
-    glPopMatrix();
-
-    glPushMatrix();
-    glTranslatef(-0.9f, 0.0f, baseZ - 0.12f);
-    glTranslatef(0, front + 0.55f, 0);
-    glutSolidSphere(pupilSize, 32, 32);
-    glPopMatrix();
-
-    // highlights
-    glColor3f(1, 1, 1);
-
-    glPushMatrix();
-    glTranslatef(1.05f, 0.15f, baseZ + 0.05f);
-    glTranslatef(0, front + 0.55f, 0);
-    glutSolidSphere(0.10f, 20, 20);
-    glPopMatrix();
-
-    glPushMatrix();
-    glTranslatef(-0.75f, 0.15f, baseZ + 0.05f);
-    glTranslatef(0, front + 0.55f, 0);
-    glutSolidSphere(0.10f, 20, 20);
-    glPopMatrix();
-
-    // mouth
-    glColor3f(1.0f, 0.22f, 0.22f);
-
-    glPushMatrix();
-    glTranslatef(0, -0.6f, baseZ - 0.3f);
-    glTranslatef(0, front, 0);
-    glRotatef(90, 1, 0, 0);
-    glutSolidTorus(0.08f, 0.45f, 20, 30);
-    glPopMatrix();
-
-    glPopMatrix();
-}
-
-// ===========================================================
-// LIMBS
-// ===========================================================
-
-void drawLimbs()
-{
-    glColor3f(1.0f, 0.8f, 0.0f);
-
-    float t = danceT;
-    float L = 3.0f;
-    int segments = 12;
-
-    // left arm
-    glPushMatrix();
-    glTranslatef(-2.0f, 0.0f, 4.5f);
-    for (int i = 0; i < segments; i++)
-    {
-        float u = float(i) / segments;
-        float x = u * L;
-        float y = sin(t * 3 + u * 6) * 0.4f;
-        float z = cos(t * 2 + u * 5) * 0.2f;
-
-        glPushMatrix();
-        glTranslatef(-x, y, z);
-        glutSolidTorus(0.12f, 0.25f, 12, 20);
-        glPopMatrix();
-    }
-    glPopMatrix();
-
-    // right arm
-    glPushMatrix();
-    glTranslatef(2.0f, 0.0f, 4.5f);
-    for (int i = 0; i < segments; i++)
-    {
-        float u = float(i) / segments;
-        float x = u * L;
-        float y = sin(t * 3 + u * 6 + 3.14f) * 0.4f;
-        float z = cos(t * 2 + u * 5 + 3.14f) * 0.2f;
-
-        glPushMatrix();
-        glTranslatef(x, y, z);
-        glutSolidTorus(0.12f, 0.25f, 12, 20);
-        glPopMatrix();
-    }
-    glPopMatrix();
-}
-
-// ===========================================================
-// TREE
-// ===========================================================
-
-void drawTree()
-{
-    glPushMatrix();
-
-    glTranslatef(bradX, bradY, bradZ);
-
-    glColor3f(0.4f, 0.25f, 0.1f);
-    glPushMatrix(); glTranslatef(0, 0, 1); glutSolidCylinder(0.7f, 2, 20, 20); glPopMatrix();
-
-    glColor3f(0, 0.7f, 0);
-    glPushMatrix(); glTranslatef(0, 0, 3); glutSolidCone(3.5f, 3, 30, 30); glPopMatrix();
-    glPushMatrix(); glTranslatef(0, 0, 5); glutSolidCone(2.7f, 3, 30, 30); glPopMatrix();
-    glPushMatrix(); glTranslatef(0, 0, 7); glutSolidCone(2.0f, 3, 30, 30); glPopMatrix();
-
-    drawFace();
-    drawLimbs();
-
-    glPopMatrix();
-}
-
-// ===========================================================
-// UI: SOUND BAR
-// ===========================================================
-
-int winW = 900;
-int winH = 700;
-bool dragVolume = false;
-
-const int barWidth = 160;
-const int barHeight = 18;
-
-void drawSoundBar()
-{
-    glDisable(GL_LIGHTING);
-    glDisable(GL_DEPTH_TEST);
-
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-    gluOrtho2D(0, winW, 0, winH);
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    int margin = 20;
-    int x0 = winW - barWidth - margin;
-    int y0 = winH - barHeight - margin;
-    int x1 = x0 + barWidth;
-    int y1 = y0 + barHeight;
-
-    glColor3f(0.3f, 0.3f, 0.3f);
-    glBegin(GL_QUADS);
-    glVertex2i(x0, y0);
-    glVertex2i(x1, y0);
-    glVertex2i(x1, y1);
-    glVertex2i(x0, y1);
-    glEnd();
-
-    float frac = volumeLevel / 100.0f;
-    int xFill = x0 + int(barWidth * frac);
-
-    glColor3f(0.0f, 0.4f, 0.0f);
-    glBegin(GL_QUADS);
-    glVertex2i(x0, y0);
-    glVertex2i(xFill, y0);
-    glVertex2i(xFill, y1);
-    glVertex2i(x0, y1);
-    glEnd();
-
-    glColor3f(0, 0, 0);
-    glBegin(GL_LINE_LOOP);
-    glVertex2i(x0, y0);
-    glVertex2i(x1, y0);
-    glVertex2i(x1, y1);
-    glVertex2i(x0, y1);
-    glEnd();
-
-    glPopMatrix();
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
-    glMatrixMode(GL_MODELVIEW);
-
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_LIGHTING);
-}
-
-bool isInsideSoundBar(int mx, int my)
-{
-    int margin = 20;
-    int x0 = winW - barWidth - margin;
-    int y0 = winH - barHeight - margin;
-    int x1 = x0 + barWidth;
-    int y1 = y0 + barHeight;
-
-    int yGL = my;
-    return (mx >= x0 && mx <= x1 && (winH - yGL) >= y0 && (winH - yGL) <= y1);
-}
-
-void updateVolumeFromMouse(int mx, int /*my*/)
-{
-    int margin = 20;
-    int x0 = winW - barWidth - margin;
-    int x1 = x0 + barWidth;
-
-    if (mx < x0) mx = x0;
-    if (mx > x1) mx = x1;
-
-    float frac = float(mx - x0) / float(barWidth);
-    volumeLevel = int(frac * 100.0f);
-    if (volumeLevel < 0) volumeLevel = 0;
-    if (volumeLevel > 100) volumeLevel = 100;
-
-    setMusicVolume();
-}
-
-// ===========================================================
-// DISPLAY
-// ===========================================================
 
 void display()
 {
@@ -455,16 +80,13 @@ void display()
         0, 0, 1);
 
     drawGround();
-    drawRadio();   // <-- radio in scene
+    drawRadio();
     drawTree();
+    drawMusicNotes();
     drawSoundBar();
 
     glutSwapBuffers();
 }
-
-// ===========================================================
-// IDLE
-// ===========================================================
 
 void idle()
 {
@@ -474,7 +96,6 @@ void idle()
     {
         bradZ += jumpSpeed;
         jumpSpeed += gravity;
-
         if (bradZ <= 0)
         {
             bradZ = 0;
@@ -482,127 +103,45 @@ void idle()
         }
     }
 
-    // OPTIONAL: simulate "music coming from radio" by distance attenuation
-    // (still controlled by your volume bar, but quieter when far)
+    // volum cu distanță
     if (musicLoaded)
     {
         float dx = bradX - radioX;
         float dy = bradY - radioY;
-        float dist = std::sqrt(dx * dx + dy * dy);
+        float dist = sqrt(dx * dx + dy * dy);
+        setMusicVolumeAttenuated(dist);
+    }
 
-        int attenuated = int(volumeLevel * (1.0f / (1.0f + dist * 0.30f)));
-        if (attenuated < 0) attenuated = 0;
-        if (attenuated > 100) attenuated = 100;
+    // spawn notă la interval
+    if (!musicNote.active)
+    {
+        noteCooldown++;
+        if (noteCooldown > 60)   // ≈ 1 notă / secundă
+        {
+            spawnMusicNote();
+            noteCooldown = 0;
+        }
+    }
+    else
+    {
+        // mișcare LENTĂ în sus
+        musicNote.z += 0.01f;
 
-        int mciVol = attenuated * 10;
-        std::string cmd = "setaudio music volume to " + std::to_string(mciVol);
-        mciSendStringA(cmd.c_str(), NULL, 0, NULL);
+        // balans fin (aer)
+        musicNote.phase += 0.03f;
+        musicNote.x = radioX + sin(musicNote.phase) * 0.15f;
+
+        // dispare sus
+        if (musicNote.z > 9.0f)
+        {
+            musicNote.active = false;
+        }
     }
 
     glutPostRedisplay();
 }
 
-// ===========================================================
-// KEY NORMAL (movement + collision)
-// ===========================================================
 
-void keyNormal(unsigned char key, int, int)
-{
-    float speed = 0.3f;
-
-    float newX = bradX;
-    float newY = bradY;
-
-    if (key == 'w' || key == 'W') newY += speed;
-    if (key == 's' || key == 'S') newY -= speed;
-    if (key == 'a' || key == 'A') newX -= speed;
-    if (key == 'd' || key == 'D') newX += speed;
-
-    // apply movement only if no collision with radio
-    if (!collidesWithRadio(newX, newY))
-    {
-        bradX = newX;
-        bradY = newY;
-    }
-
-    if (key == ' ' && !jumping)
-    {
-        jumping = true;
-        jumpSpeed = 0.28f;
-    }
-
-    if (key == 27) exit(0);
-}
-
-// ===========================================================
-// KEY SPECIAL
-// ===========================================================
-
-void keySpecial(int key, int, int)
-{
-    if (key == GLUT_KEY_LEFT)  camYaw -= 0.05f;
-    if (key == GLUT_KEY_RIGHT) camYaw += 0.05f;
-    if (key == GLUT_KEY_UP)    camPitch += 0.03f;
-    if (key == GLUT_KEY_DOWN)  camPitch -= 0.03f;
-
-    if (camPitch > 1.3f) camPitch = 1.3f;
-    if (camPitch < -1.3f) camPitch = -1.3f;
-}
-
-// ===========================================================
-// MOUSE (SOUND BAR CONTROL)
-// ===========================================================
-
-void mouse(int button, int state, int x, int y)
-{
-    if (button == GLUT_LEFT_BUTTON)
-    {
-        if (state == GLUT_DOWN)
-        {
-            if (isInsideSoundBar(x, y))
-            {
-                dragVolume = true;
-                updateVolumeFromMouse(x, y);
-            }
-        }
-        else if (state == GLUT_UP)
-        {
-            dragVolume = false;
-        }
-    }
-}
-
-void motion(int x, int y)
-{
-    (void)y;
-    if (dragVolume)
-    {
-        updateVolumeFromMouse(x, y);
-    }
-}
-
-// ===========================================================
-// RESHAPE
-// ===========================================================
-
-void reshape(int w, int h)
-{
-    winW = w;
-    winH = h;
-
-    if (h == 0) h = 1;
-    float r = float(w) / float(h);
-
-    glViewport(0, 0, w, h);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(60, r, 0.1, 300);
-    glMatrixMode(GL_MODELVIEW);
-}
-
-// ===========================================================
-// MAIN
-// ===========================================================
 
 int main(int argc, char** argv)
 {
@@ -618,6 +157,8 @@ int main(int argc, char** argv)
     playMusic();
 
     glutReshapeFunc(reshape);
+    reshape(winW, winH); // asigură proiecția de la start (safe)
+
     glutDisplayFunc(display);
     glutIdleFunc(idle);
     glutKeyboardFunc(keyNormal);
