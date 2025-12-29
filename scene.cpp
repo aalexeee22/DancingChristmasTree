@@ -15,7 +15,9 @@ struct MusicNote
     float x, y, z;
     float phase;
     bool active;
+    int type;   // 0 = doime ♩, 1 = optime ♪, 2 = saisprezecime ♬
 };
+
 
 extern MusicNote musicNote;
 extern int noteCooldown;
@@ -243,11 +245,31 @@ void drawMusicNotes()
     // cap notă
     glutSolidSphere(0.18f, 16, 16);
 
-    // coadă
+    // tija
     glBegin(GL_LINES);
     glVertex3f(0.15f, 0.0f, 0.0f);
-    glVertex3f(0.15f, 0.0f, 0.8f);
+    glVertex3f(0.15f, 0.0f, 0.9f);
     glEnd();
+
+    // OPTIME ♪ → un steguleț
+    if (musicNote.type >= 1)
+    {
+        glBegin(GL_TRIANGLES);
+        glVertex3f(0.15f, 0.0f, 0.9f);
+        glVertex3f(0.6f, 0.0f, 0.7f);
+        glVertex3f(0.15f, 0.0f, 0.7f);
+        glEnd();
+    }
+
+    // SAISPREZECIME ♬ → două stegulețe
+    if (musicNote.type == 2)
+    {
+        glBegin(GL_TRIANGLES);
+        glVertex3f(0.15f, 0.0f, 0.7f);
+        glVertex3f(0.6f, 0.0f, 0.5f);
+        glVertex3f(0.15f, 0.0f, 0.5f);
+        glEnd();
+    }
 
     glEnable(GL_LIGHTING);
     glPopMatrix();

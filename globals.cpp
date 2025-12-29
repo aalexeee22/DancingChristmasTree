@@ -40,10 +40,16 @@ extern const int barHeight = 18;
 struct MusicNote
 {
     float x, y, z;
+    float baseX;
     float phase;
     bool active;
+    int type;
 };
+
 
 MusicNote musicNote;
 int noteCooldown = 0;
+
+int burstCount = 0;
+int burstRemaining = 0;
 

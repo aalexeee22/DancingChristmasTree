@@ -8,13 +8,16 @@
 struct MusicNote
 {
     float x, y, z;
+    float baseX;
     float phase;
     bool active;
+    int type;
 };
 
+extern int burstCount;
+extern int burstRemaining;
 extern MusicNote musicNote;
 extern int noteCooldown;
-
 
 
 
@@ -56,13 +59,26 @@ void spawnMusicNote()
 {
     if (musicNote.active) return;
 
-    musicNote.x = radioX;
+    // offset mic diferit pentru fiecare notă
+    float offset = ((rand() % 100) / 100.0f - 0.5f) * 0.6f;
+
+    musicNote.x = radioX + offset;
+    musicNote.baseX = musicNote.x;
     musicNote.y = radioY;
     musicNote.z = 1.5f;
 
-    musicNote.phase = 0.0f;
+    musicNote.phase = (rand() % 100) / 100.0f * 6.28f;
     musicNote.active = true;
+
+    int r = rand() % 100;
+    if (r < 60)       musicNote.type = 0;
+    else if (r < 85)  musicNote.type = 1;
+    else              musicNote.type = 2;
 }
+
+
+
+
 
 
 
@@ -113,30 +129,38 @@ void idle()
     }
 
     // spawn notă la interval
+    // dacă nu e notă activă
     if (!musicNote.active)
     {
         noteCooldown++;
-        if (noteCooldown > 60)   // ≈ 1 notă / secundă
+
+        if (noteCooldown > 40)
         {
+            // dacă NU suntem într-un burst, începem unul
+            if (burstRemaining == 0)
+            {
+                burstRemaining = 2 + rand() % 2; // 2–3 note
+            }
+
             spawnMusicNote();
+            burstRemaining--;
             noteCooldown = 0;
         }
     }
     else
     {
-        // mișcare LENTĂ în sus
+        // mișcare lentă
         musicNote.z += 0.01f;
 
-        // balans fin (aer)
         musicNote.phase += 0.03f;
-        musicNote.x = radioX + sin(musicNote.phase) * 0.15f;
+        musicNote.x = musicNote.baseX + sin(musicNote.phase) * 0.12f;
 
-        // dispare sus
         if (musicNote.z > 9.0f)
         {
             musicNote.active = false;
         }
     }
+
 
     glutPostRedisplay();
 }
