@@ -20,9 +20,12 @@ extern int burstCount;
 extern int burstRemaining;
 extern MusicNote musicNote;
 extern int noteCooldown;
+extern void nextSong();
+extern void prevSong();
+
+
 
 extern int winW, winH;
-
 extern float camYaw, camPitch, camDist;
 extern float bradX, bradY, bradZ;
 
@@ -125,6 +128,7 @@ void display()
 
     // bara de volum se deseaza la final, in coordonate de ecran, peste tot restul
     drawSoundBar();
+
 
     glutSwapBuffers();
 }

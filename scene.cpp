@@ -216,6 +216,40 @@ void drawRadio()
     glVertex3f(radioX - 2.2f, radioY - 0.7f, radioZ + 4.2f);
     glEnd();
     glEnable(GL_LIGHTING);
+
+    // =====================
+// BUTOANE RADIO – PE FAȚA REALĂ
+// =====================
+    glDisable(GL_LIGHTING);
+
+    float frontY = radioY + 0.76f;
+    float buttonZ = radioZ + 1.0f + 0.02f; // scoase PUȚIN în afară
+
+    // PREV ⏮
+    glPushMatrix();
+    glTranslatef(radioX - 0.5f, frontY, buttonZ);
+    glColor3f(0.9f, 0.2f, 0.2f);
+    glBegin(GL_TRIANGLES);
+    glVertex3f(0.0f, 0.0f, 0.25f);
+    glVertex3f(-0.3f, 0.0f, 0.0f);
+    glVertex3f(0.0f, 0.0f, -0.25f);
+    glEnd();
+    glPopMatrix();
+
+    // NEXT ⏭
+    glPushMatrix();
+    glTranslatef(radioX + 0.5f, frontY, buttonZ);
+    glColor3f(0.2f, 0.9f, 0.2f);
+    glBegin(GL_TRIANGLES);
+    glVertex3f(0.0f, 0.0f, 0.25f);
+    glVertex3f(0.3f, 0.0f, 0.0f);
+    glVertex3f(0.0f, 0.0f, -0.25f);
+    glEnd();
+    glPopMatrix();
+
+    glEnable(GL_LIGHTING);
+
+
 }
 
 static void drawFace()

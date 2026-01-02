@@ -1,66 +1,132 @@
-// audio.cpp
-#include <windows.h>
-#include <mmsystem.h>
-#pragma comment(lib, "winmm.lib")
+ï»¿// audio.cpp
+#define MINIAUDIO_IMPLEMENTATION
+#include "miniaudio.h"
 
 #include <iostream>
-#include <fstream>
 #include <string>
+#include <cmath>
 
-extern int volumeLevel;
+using std::string;
+using std::cout;
+using std::endl;
+
+// =======================
+// VARIABILE EXTERNE
+// =======================
+extern int volumeLevel;   // 0..100
 extern bool musicLoaded;
 
+// =======================
+// PLAYLIST
+// =======================
+const char* songs[] =
+{
+    "assets/sounds/audio1.mp3",
+    "assets/sounds/audio2.mp3",
+    "assets/sounds/audio3.mp3"
+};
+
+int songCount = 3;
+int currentSong = 0;
+
+// =======================
+// MINIAUDIO STATE
+// =======================
+static ma_engine engine;
+static ma_sound sound;
+static bool engineInitialized = false;
+
+// =======================
+// INIT ENGINE (ONCE)
+// =======================
+static void initAudio()
+{
+    if (engineInitialized)
+        return;
+
+    if (ma_engine_init(NULL, &engine) != MA_SUCCESS)
+    {
+        cout << "[audio] failed to init engine" << endl;
+        return;
+    }
+
+    engineInitialized = true;
+}
+
+// =======================
+// SET VOLUME (SAFE)
+// =======================
 void setMusicVolume()
 {
     if (!musicLoaded) return;
 
-    int mciVol = volumeLevel * 10; // 0..1000
-    std::string cmd = "setaudio music volume to " + std::to_string(mciVol);
-    mciSendStringA(cmd.c_str(), NULL, 0, NULL);
+    float v = volumeLevel / 100.0f;
+    ma_sound_set_volume(&sound, v);
 }
 
+// =======================
+// PLAY MUSIC
+// =======================
 void playMusic()
 {
-    std::string path = "assets/sounds/brad.mp3";
+    initAudio();
 
-    std::ifstream f(path);
-    if (!f.good())
+    // stop & unload previous
+    if (musicLoaded)
+        ma_sound_uninit(&sound);
+
+    const char* path = songs[currentSong];
+
+    if (ma_sound_init_from_file(
+        &engine,
+        path,
+        MA_SOUND_FLAG_STREAM,
+        NULL,
+        NULL,
+        &sound) != MA_SUCCESS)
     {
-        std::cout << "[error] audio file not found: " << path << std::endl;
-        return;
-    }
-    f.close();
-
-    mciSendStringA("close music", NULL, 0, NULL);
-
-    std::string cmdOpen = "open \"" + path + "\" type mpegvideo alias music";
-    if (mciSendStringA(cmdOpen.c_str(), NULL, 0, NULL) != 0)
-    {
-        std::cout << "[error] cannot open audio file" << std::endl;
+        cout << "[audio] failed to load: " << path << endl;
+        musicLoaded = false;
         return;
     }
 
     musicLoaded = true;
+
+    ma_sound_set_looping(&sound, MA_TRUE);
     setMusicVolume();
-    mciSendStringA("play music repeat", NULL, 0, NULL);
+    ma_sound_start(&sound);
 }
 
-#include <algorithm>
+// =======================
+// NEXT / PREV
+// =======================
+void nextSong()
+{
+    currentSong = (currentSong + 1) % songCount;
+    playMusic();
+}
 
-extern int volumeLevel;
-extern bool musicLoaded;
+void prevSong()
+{
+    currentSong--;
+    if (currentSong < 0)
+        currentSong = songCount - 1;
+
+    playMusic();
+}
+
+// =======================
+// DISTANCE ATTENUATION (REAL, NO DISTORTION)
+// =======================
 void setMusicVolumeAttenuated(float dist)
 {
     if (!musicLoaded) return;
 
-    // exact formula ta originalã
     float factor = 1.0f / (1.0f + dist * 0.30f);
-    int attenuated = int(volumeLevel * factor);
+    float v = (volumeLevel / 100.0f) * factor;
 
-    if (attenuated < 0) attenuated = 0;
-    if (attenuated > 100) attenuated = 100;
+    if (v < 0.0f) v = 0.0f;
+    if (v > 1.0f) v = 1.0f;
 
-    int mciVol = attenuated * 10;
-    std::string cmd = "setaudio music volume to " + std::to_string(mciVol);
-    mciSendStringA(cmd.c_str(), NULL, 0, NULL);
+    ma_sound_set_volume(&sound, v);
 }

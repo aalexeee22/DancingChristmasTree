@@ -1016,6 +1016,9 @@
     <ClInclude Include="include\glm\simd\vector_relational.h">
       <Filter>Header Files\template-built-ins\glm\simd</Filter>
     </ClInclude>
+    <ClInclude Include="miniaudio.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="include\glm\CMakeLists.txt">
