@@ -19,8 +19,6 @@ extern int burstRemaining;
 extern MusicNote musicNote;
 extern int noteCooldown;
 
-
-
 extern int winW, winH;
 
 extern float camYaw, camPitch, camDist;
@@ -48,6 +46,12 @@ void drawTree();
 
 void drawMusicNotes();
 void drawSoundBar();
+
+// ninsoare
+void initSnow();
+void setSnowCamera(float camX, float camY, float camZ);
+void updateSnow(float dt);
+void drawSnow();
 
 void keyNormal(unsigned char, int, int);
 void keySpecial(int, int, int);
@@ -77,16 +81,12 @@ void spawnMusicNote()
 }
 
 
-
-
-
-
-
 void display()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
 
+    // pozitia camerei pe sfera
     float camX = camDist * cos(camPitch) * cos(camYaw);
     float camY = camDist * cos(camPitch) * sin(camYaw);
     float camZ = camDist * sin(camPitch);
@@ -95,10 +95,17 @@ void display()
         0, 0, 3,
         0, 0, 1);
 
+    // scena 3D principala (brad + radio)
     drawGround();
     drawRadio();
     drawTree();
     drawMusicNotes();
+    
+    // desenare ninsoare
+    setSnowCamera(camX, camY, camZ);
+    drawSnow();
+
+    // bara de volum se deseaza la final, in coordonate de ecran, peste tot restul
     drawSoundBar();
 
     glutSwapBuffers();
@@ -106,7 +113,14 @@ void display()
 
 void idle()
 {
-    danceT += 0.005f;
+    static int lastMS = glutGet(GLUT_ELAPSED_TIME);
+    int nowMS = glutGet(GLUT_ELAPSED_TIME);
+    float dt = (nowMS - lastMS) / 1000.0f;
+    lastMS = nowMS;
+
+    updateSnow(dt);
+
+    danceT += dt + 0.005f;
 
     if (jumping)
     {
@@ -161,7 +175,6 @@ void idle()
         }
     }
 
-
     glutPostRedisplay();
 }
 
@@ -172,13 +185,19 @@ int main(int argc, char** argv)
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(winW, winH);
-    glutCreateWindow("brad dansator 3d + radio");
+    glutCreateWindow("Brad 3D dansator");
 
     glEnable(GL_DEPTH_TEST);
-    glClearColor(0.6f, 0.9f, 0.95f, 1);
+    glClearColor(0.45f, 0.56f, 0.68f, 1.0f);
 
+    // lumina pentru intreaga scena (brad, radio, fulgi)
     setupLight();
+
+    // muzica de fundal
     playMusic();
+
+    // se porneste ninsoarea si timer-ul
+    initSnow();
 
     glutReshapeFunc(reshape);
     reshape(winW, winH); // asigură proiecția de la start (safe)

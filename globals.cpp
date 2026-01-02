@@ -1,5 +1,4 @@
-﻿// globals.cpp
-// AICI sunt DEFINITE toate globalele (o singură dată)
+﻿// Contine toate constantele globale
 
 int volumeLevel = 10;   // 0..100
 bool musicLoaded = false;
@@ -16,7 +15,7 @@ float bradZ = 0.0f;
 
 bool jumping = false;
 float jumpSpeed = 0.0f;
-float gravity = -0.015f;
+float gravity = -0.008f;
 
 float danceT = 0.0f;
 

@@ -41,10 +41,11 @@ void setupLight()
     // OPTIONAL dar safe: ajută când scalezi obiecte (radio-ul)
     glEnable(GL_NORMALIZE);
 
-    GLfloat pos[] = { 5.0f, -5.0f, 10.0f, 1.0f };
+    //GLfloat pos[] = { 5.0f, -5.0f, 10.0f, 1.0f };
+    GLfloat pos[] = { 1.5f, 3.0f, 4.0f, 1.0f };
     glLightfv(GL_LIGHT0, GL_POSITION, pos);
 
-    GLfloat diff[] = { 1, 1, 1, 1 };
+    GLfloat diff[] = { 0.9f, 0.9f, 0.9f, 1.0f };
     glLightfv(GL_LIGHT0, GL_DIFFUSE, diff);
 
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
@@ -77,7 +78,7 @@ void drawRadio()
 
     glPushMatrix();
     glTranslatef(radioX + 1.15f, radioY, radioZ + 1.0f);
-    glColor3f(0.05f, 0.05f, 0.05f);
+    glColor3f(1, 0, 0);
     glRotatef(90, 1, 0, 0);
     glutSolidTorus(0.08f, 0.35f, 16, 24);
     glPopMatrix();
