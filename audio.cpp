@@ -15,6 +15,7 @@ using std::endl;
 // =======================
 extern int volumeLevel;   // 0..100
 extern bool musicLoaded;
+extern bool radioOn;
 
 // =======================
 // PLAYLIST
@@ -53,6 +54,32 @@ static void initAudio()
     engineInitialized = true;
 }
 
+
+void stopMusic()
+{
+    if (!musicLoaded) return;
+
+    ma_sound_stop(&sound);
+}
+
+void toggleRadio()
+{
+    if (!engineInitialized)
+        return;
+
+    radioOn = !radioOn;
+
+    if (radioOn)
+    {
+        ma_sound_start(&sound);
+    }
+    else
+    {
+        ma_sound_stop(&sound);
+    }
+}
+
+
 // =======================
 // SET VOLUME (SAFE)
 // =======================
@@ -67,11 +94,11 @@ void setMusicVolume()
 // =======================
 // PLAY MUSIC
 // =======================
+
 void playMusic()
 {
     initAudio();
 
-    // stop & unload previous
     if (musicLoaded)
         ma_sound_uninit(&sound);
 
@@ -94,8 +121,11 @@ void playMusic()
 
     ma_sound_set_looping(&sound, MA_TRUE);
     setMusicVolume();
-    ma_sound_start(&sound);
+
+    if (radioOn)               // 👈 IMPORTANT
+        ma_sound_start(&sound);
 }
+
 
 // =======================
 // NEXT / PREV

@@ -55,3 +55,4 @@ int noteCooldown = 0;
 int burstCount = 0;
 int burstRemaining = 0;
 
+bool radioOn = true;

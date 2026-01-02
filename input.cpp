@@ -8,7 +8,7 @@ extern bool jumping;
 extern float jumpSpeed;
 extern float gravity;
 extern float camDist;
-
+extern void toggleRadio();
 
 
 extern int winW, winH;
@@ -121,12 +121,116 @@ bool clickOnRadioButton(int x, int y, bool& isNext)
 }
 
 
+// ===== helpers: ray -> plane intersection =====
+static bool getMouseRayIntersectionPlaneY(
+    int x, int y,
+    double yPlane,
+    double& ix, double& iy, double& iz)
+{
+    GLdouble model[16], proj[16];
+    GLint viewport[4];
 
+    glGetDoublev(GL_MODELVIEW_MATRIX, model);
+    glGetDoublev(GL_PROJECTION_MATRIX, proj);
+    glGetIntegerv(GL_VIEWPORT, viewport);
 
+    GLdouble sx = (GLdouble)x;
+    GLdouble sy = (GLdouble)(viewport[3] - y);
+
+    GLdouble nx, ny, nz;
+    GLdouble fx, fy, fz;
+
+    gluUnProject(sx, sy, 0.0, model, proj, viewport, &nx, &ny, &nz);
+    gluUnProject(sx, sy, 1.0, model, proj, viewport, &fx, &fy, &fz);
+
+    double dirX = fx - nx;
+    double dirY = fy - ny;
+    double dirZ = fz - nz;
+
+    if (fabs(dirY) < 1e-9) return false;
+
+    double t = (yPlane - ny) / dirY;
+    if (t < 0.0) return false;
+
+    ix = nx + dirX * t;
+    iy = yPlane;
+    iz = nz + dirZ * t;
+    return true;
+}
+
+static bool getMouseRayIntersectionPlaneX(
+    int x, int y,
+    double xPlane,
+    double& ix, double& iy, double& iz)
+{
+    GLdouble model[16], proj[16];
+    GLint viewport[4];
+
+    glGetDoublev(GL_MODELVIEW_MATRIX, model);
+    glGetDoublev(GL_PROJECTION_MATRIX, proj);
+    glGetIntegerv(GL_VIEWPORT, viewport);
+
+    GLdouble sx = (GLdouble)x;
+    GLdouble sy = (GLdouble)(viewport[3] - y);
+
+    GLdouble nx, ny, nz;
+    GLdouble fx, fy, fz;
+
+    gluUnProject(sx, sy, 0.0, model, proj, viewport, &nx, &ny, &nz);
+    gluUnProject(sx, sy, 1.0, model, proj, viewport, &fx, &fy, &fz);
+
+    double dirX = fx - nx;
+    double dirY = fy - ny;
+    double dirZ = fz - nz;
+
+    if (fabs(dirX) < 1e-9) return false;
+
+    double t = (xPlane - nx) / dirX;
+    if (t < 0.0) return false;
+
+    ix = xPlane;
+    iy = ny + dirY * t;
+    iz = nz + dirZ * t;
+    return true;
+}
+
+// ===== hit tests =====
+static bool hitPrevNextOnFront(double ix, double iz, bool& isNext)
+{
+    double buttonZ = radioZ + 1.0 + 0.02; // exact ca in scene.cpp
+
+    // PREV
+    if (fabs(ix - (radioX - 0.5)) < 0.35 && fabs(iz - buttonZ) < 0.35)
+    {
+        isNext = false;
+        return true;
+    }
+
+    // NEXT
+    if (fabs(ix - (radioX + 0.5)) < 0.35 && fabs(iz - buttonZ) < 0.35)
+    {
+        isNext = true;
+        return true;
+    }
+
+    return false;
+}
+
+static bool hitPowerOnRightSide(double iy, double iz)
+{
+    // buton rosu e la (radioX + 1.15, radioY, radioZ + 1.0)
+    return fabs(iy - radioY) < 0.35 &&
+        fabs(iz - (radioZ + 1.0)) < 0.35;
+}
+
+// ===== mouse =====
 void mouse(int button, int state, int x, int y)
 {
-    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+    if (button != GLUT_LEFT_BUTTON) return;
+
+    if (state == GLUT_DOWN)
     {
+        // UI volum (2D)
         if (isInsideSoundBar(x, y))
         {
             dragVolume = true;
@@ -134,20 +238,45 @@ void mouse(int button, int state, int x, int y)
             return;
         }
 
-        bool next;
-        if (clickOnRadioButton(x, y, next))
+        // 1) POWER: intersecție cu planul lateral (X = radioX + 1.15)
         {
-            if (next) nextSong();
-            else prevSong();
-            return;
+            double ix, iy, iz;
+            double xPlane = radioX + 1.15; // exact unde desenezi torus-ul
+
+            if (getMouseRayIntersectionPlaneX(x, y, xPlane, ix, iy, iz))
+            {
+                if (hitPowerOnRightSide(iy, iz))
+                {
+                    toggleRadio();
+                    return;
+                }
+            }
+        }
+
+        // 2) PREV/NEXT: intersecție cu planul feței (Y = radioY + 0.76)
+        {
+            double ix, iy, iz;
+            double yPlane = radioY + 0.76;
+
+            if (getMouseRayIntersectionPlaneY(x, y, yPlane, ix, iy, iz))
+            {
+                bool next;
+                if (hitPrevNextOnFront(ix, iz, next))
+                {
+                    if (next) nextSong();
+                    else prevSong();
+                    return;
+                }
+            }
         }
     }
 
-    if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
+    if (state == GLUT_UP)
     {
         dragVolume = false;
     }
 }
+
 
 
 void motion(int x, int y)

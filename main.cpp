@@ -39,6 +39,7 @@ extern bool musicLoaded;
 
 extern float radioX, radioY;
 extern bool dragVolume;
+extern bool radioOn;
 
 void setupLight();
 void applyLightPosition();
@@ -136,6 +137,7 @@ void display()
     glutSwapBuffers();
 }
 
+
 void idle()
 {
     static int lastMS = glutGet(GLUT_ELAPSED_TIME);
@@ -143,23 +145,28 @@ void idle()
     float dt = (nowMS - lastMS) / 1000.0f;
     lastMS = nowMS;
 
+    // ninsoare
     updateSnow(dt);
 
+    // animatie dans
     danceT += dt + 0.005f;
 
+    // saritura
     if (jumping)
     {
         bradZ += jumpSpeed;
         jumpSpeed += gravity;
-        if (bradZ <= 0)
+        if (bradZ <= 0.0f)
         {
-            bradZ = 0;
+            bradZ = 0.0f;
             jumping = false;
         }
     }
 
-    // volum cu distanță
-    if (musicLoaded)
+    // =========================
+    // AUDIO – DOAR DACĂ RADIO E ON
+    // =========================
+    if (musicLoaded && radioOn)
     {
         float dx = bradX - radioX;
         float dy = bradY - radioY;
@@ -167,41 +174,53 @@ void idle()
         setMusicVolumeAttenuated(dist);
     }
 
-    // spawn notă la interval
-    // dacă nu e notă activă
-    if (!musicNote.active)
+    // =========================
+    // NOTE MUZICALE
+    // =========================
+    if (!radioOn)
     {
-        noteCooldown++;
-
-        if (noteCooldown > 40)
-        {
-            // dacă NU suntem într-un burst, începem unul
-            if (burstRemaining == 0)
-            {
-                burstRemaining = 2 + rand() % 2; // 2–3 note
-            }
-
-            spawnMusicNote();
-            burstRemaining--;
-            noteCooldown = 0;
-        }
+        // radio OFF → fara note
+        musicNote.active = false;
     }
     else
     {
-        // mișcare lentă
-        musicNote.z += 0.01f;
-
-        musicNote.phase += 0.03f;
-        musicNote.x = musicNote.baseX + sin(musicNote.phase) * 0.12f;
-
-        if (musicNote.z > 9.0f)
+        // spawn notă
+        if (!musicNote.active)
         {
-            musicNote.active = false;
+            noteCooldown++;
+
+            if (noteCooldown > 40)
+            {
+                if (burstRemaining == 0)
+                {
+                    burstRemaining = 2 + rand() % 2; // 2–3 note
+                }
+
+                spawnMusicNote();
+                burstRemaining--;
+                noteCooldown = 0;
+            }
+        }
+        else
+        {
+            // miscare notă
+            musicNote.z += 0.01f;
+
+            musicNote.phase += 0.03f;
+            musicNote.x =
+                musicNote.baseX +
+                sin(musicNote.phase) * 0.12f;
+
+            if (musicNote.z > 9.0f)
+            {
+                musicNote.active = false;
+            }
         }
     }
 
     glutPostRedisplay();
 }
+
 
 
 

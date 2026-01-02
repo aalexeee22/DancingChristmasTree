@@ -330,6 +330,21 @@ void drawRadio()
 
     glEnable(GL_LIGHTING);
 
+    extern bool radioOn;
+
+    glPushMatrix();
+    glTranslatef(radioX + 1.15f, radioY, radioZ + 1.0f);
+
+    if (radioOn)
+        glColor3f(1.0f, 0.0f, 0.0f);   // ON
+    else
+        glColor3f(0.2f, 0.2f, 0.2f);   // OFF
+
+    glRotatef(90, 1, 0, 0);
+    glutSolidTorus(0.08f, 0.35f, 16, 24);
+    glPopMatrix();
+
+
 
 }
 
