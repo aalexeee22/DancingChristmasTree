@@ -4,6 +4,7 @@
 #include <cmath>
 #include <string>
 #include <cstdlib>
+#include <ctime>
 
 struct MusicNote
 {
@@ -202,6 +203,7 @@ void idle()
 
 int main(int argc, char** argv)
 {
+    srand((unsigned)time(nullptr));
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowSize(winW, winH);
