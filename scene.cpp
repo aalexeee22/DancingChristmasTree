@@ -3,12 +3,14 @@
 #include <cmath>
 
 extern float camYaw, camPitch, camDist;
-
+extern float SKY_BG_RGBA[4];
 extern float bradX, bradY, bradZ;
 extern float danceT;
 
 extern float radioX, radioY, radioZ;
 extern float radioRadius, bradRadius;
+
+bool g_useHeadlight = true;
 
 struct MusicNote
 {
@@ -41,15 +43,132 @@ void setupLight()
     // OPTIONAL dar safe: ajută când scalezi obiecte (radio-ul)
     glEnable(GL_NORMALIZE);
 
-    //GLfloat pos[] = { 5.0f, -5.0f, 10.0f, 1.0f };
-    GLfloat pos[] = { 1.5f, 3.0f, 4.0f, 1.0f };
+    GLfloat pos[] = { 5.0f, 5.0f, 10.0f, 1.0f };
+    //GLfloat pos[] = { 1.5f, 3.0f, 4.0f, 1.0f };
     glLightfv(GL_LIGHT0, GL_POSITION, pos);
 
     GLfloat diff[] = { 0.9f, 0.9f, 0.9f, 1.0f };
     glLightfv(GL_LIGHT0, GL_DIFFUSE, diff);
 
+    GLfloat amb[] = { 0.25f, 0.28f, 0.33f, 1.0f };
+    glLightfv(GL_LIGHT0, GL_AMBIENT, amb);
+
+    GLfloat spec[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    glLightfv(GL_LIGHT0, GL_SPECULAR, spec);
+
+
     glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
 }
+
+void applyLightPosition()
+{
+    // IMPORTANT:
+    // - dacă vrem headlight: apelăm funcția înainte de gluLookAt (modelview = identitate)
+    // - dacă vrem world sun: apelăm funcția după gluLookAt (modelview = view)
+    if (g_useHeadlight)
+    {
+        // Lumină direcțională dinspre cameră (w=0) – “lanternă pe cameră”
+        GLfloat dir[] = { 0.0f, 0.0f, 1.0f, 0.0f };
+        glLightfv(GL_LIGHT0, GL_POSITION, dir);
+    }
+    else
+    {
+        // Lumină punctuală fixă în lume (w=1) – “soare”/sursă în scenă
+        // Păstrează aici aceeași poziție pe care o folosiți ca "soare".
+        GLfloat pos[] = { 5.0f, 5.0f, 10.0f, 1.0f };
+        glLightfv(GL_LIGHT0, GL_POSITION, pos);
+    }
+}
+
+void drawSun()
+{
+    // soarele e doar un element vizual, nu se doreste sa influenteze restul scenei
+    // salvam starea scenei in momentul curent
+    glPushAttrib(GL_ENABLE_BIT | GL_CURRENT_BIT | GL_DEPTH_BUFFER_BIT | GL_FOG_BIT);
+
+    glDisable(GL_LIGHTING);                 // soarele emite lumina, nu e iluminat de scena 3D
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glDisable(GL_DEPTH_TEST);               // sa nu fie acoperit de obiecte
+    glDepthMask(GL_FALSE);                  // sa nu scrie in depth buffer
+
+    // ceata doar peste soare (halo)
+    glEnable(GL_FOG);
+    glFogi(GL_FOG_MODE, GL_EXP2);
+    glFogfv(GL_FOG_COLOR, SKY_BG_RGBA);
+    glFogf(GL_FOG_DENSITY, 0.016f);
+
+    glPushMatrix();
+
+    if (g_useHeadlight)
+        glTranslatef(-20.0f, -15.0f, 18.0f);
+    else
+        glTranslatef(18.0f, -12.0f, 22.0f);
+
+    // creare efect de halo
+    // nucleul (mai luminos)
+    glColor4f(0.98f, 0.98f, 0.92f, 0.55f);
+    glutSolidSphere(1.8, 18, 18);
+
+    // halo 1 (mai mare, mai transparent)
+    glColor4f(0.90f, 0.95f, 1.00f, 0.18f);
+    glutSolidSphere(3.8, 18, 18);
+
+    // halo 2 (si mai mare)
+    glColor4f(0.85f, 0.92f, 1.00f, 0.10f);
+    glutSolidSphere(6.5, 18, 18);
+
+    glPopMatrix();
+
+    // revenim la depth buffer normal pentru restul scenei
+    glDepthMask(GL_TRUE);
+
+    glPopAttrib();
+
+}
+
+void drawMilkySkyBackdrop()
+{
+    // gradient 2D peste fundal: cer laptos fara sa afecteze scena 3D
+    glPushAttrib(GL_ENABLE_BIT | GL_CURRENT_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glDisable(GL_LIGHTING);
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glOrtho(0, 1, 0, 1, -1, 1);
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glBegin(GL_QUADS);
+
+    // sus: mai deschis
+    glColor3f(0.65f, 0.72f, 0.80f);
+    glVertex2f(0.0f, 1.0f);
+    glVertex2f(1.0f, 1.0f);
+
+    // jos: culoarea de fundal
+    glColor3f(SKY_BG_RGBA[0], SKY_BG_RGBA[1], SKY_BG_RGBA[2]);
+    glVertex2f(1.0f, 0.0f);
+    glVertex2f(0.0f, 0.0f);
+
+    glEnd();
+
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
+
+    glDepthMask(GL_TRUE);
+    glPopAttrib();
+}
+
 
 void drawGround()
 {

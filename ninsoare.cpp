@@ -22,7 +22,7 @@ static const float SNOW_SCALE_MIN = 0.05f;
 static const float SNOW_SCALE_MAX = 0.40f;
 
 // grosimea fulgilor
-static const float SNOW_FLAKE_DEPTH = 0.015f;
+static const float SNOW_FLAKE_DEPTH = 0.012f;
 
 // display list cu geometria fulgului
 static GLuint g_snowflakeDL = 0;
@@ -351,23 +351,23 @@ void drawSnow()
     glEnable(GL_NORMALIZE);
 
     // boost de lumina doar pentru ninsoare
-    GLfloat lightAmb[] = { 0.40f, 0.70f, 1.00f, 1.00f }; // mai mult ambient => fulgi mai luminosi
-    GLfloat lightSpec[] = { 0.85f, 0.85f, 0.85f, 1.0f };
+    GLfloat lightAmb[] = { 0.40f, 0.53f, 0.65f, 1.00f }; // mai mult ambient => fulgi mai luminosi
+    GLfloat lightSpec[] = { 0.60f, 0.60f, 0.60f, 1.00f };
     glLightfv(GL_LIGHT0, GL_AMBIENT, lightAmb);
     glLightfv(GL_LIGHT0, GL_SPECULAR, lightSpec);
 
-    const GLfloat alpha = 0.90f; // pentru blending
+    const GLfloat alpha = 0.75f;
 
-    GLfloat matAmbient[] = { 0.5f, 0.58f, 0.68f, alpha };  // valori mai mari => mai putin intunecat in umbra
-    GLfloat matDiffuse[] = { 0.75f, 0.85f, 1.00f, alpha };  // alb-albastrui
-    GLfloat matSpecular[] = { 0.80f, 0.80f, 1.00f, 1.00f }; // reflexe puternice
+    GLfloat matAmbient[] = { 0.87f, 0.87f, 0.9f, alpha };  // valori mai mari => mai putin intunecat in umbra
+    GLfloat matDiffuse[] = { 0.85f, 0.85f, 1.00f, alpha };  // alb-albastrui
+    GLfloat matSpecular[] = { 0.75f, 0.80f, 0.85f, 1.00f }; // reflexe fulgi
     GLfloat matEmission[] = { 0.10f, 0.10f, 0.12f, 1.00f }; // glow discret, rece
 
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, matAmbient);
     glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, matDiffuse);
     glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, matSpecular);
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, matEmission);
-    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 64.0f);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 20.0f);
 
     // desenam fiecare fulg: coordonate finale = camera + coordonate relative
     for (int i = 0; i < SNOW_NUM_FLAKES; ++i)

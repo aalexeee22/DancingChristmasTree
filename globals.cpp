@@ -1,5 +1,8 @@
 ﻿// Contine toate constantele globale
 
+// culoare fundal – RGBA
+float SKY_BG_RGBA[4] = { 0.45f, 0.56f, 0.68f, 1.0f };
+
 int volumeLevel = 10;   // 0..100
 bool musicLoaded = false;
 

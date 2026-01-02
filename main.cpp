@@ -14,6 +14,7 @@ struct MusicNote
     int type;
 };
 
+extern float SKY_BG_RGBA[4];
 extern int burstCount;
 extern int burstRemaining;
 extern MusicNote musicNote;
@@ -36,6 +37,9 @@ extern float radioX, radioY;
 extern bool dragVolume;
 
 void setupLight();
+void applyLightPosition();
+extern bool g_useHeadlight;   // folosit doar pentru if-uri (demo)
+
 void playMusic();
 void setMusicVolume();
 void setMusicVolumeAttenuated(float dist);
@@ -43,6 +47,8 @@ void setMusicVolumeAttenuated(float dist);
 void drawGround();
 void drawRadio();
 void drawTree();
+void drawSun();
+void drawMilkySkyBackdrop();
 
 void drawMusicNotes();
 void drawSoundBar();
@@ -84,7 +90,12 @@ void spawnMusicNote()
 void display()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    drawMilkySkyBackdrop(); // cer laptos (2D), nu afecteaza scena 3D
     glLoadIdentity();
+
+    // Dacă e headlight, setăm poziția luminii ACUM (înainte de view)
+    if (g_useHeadlight)
+        applyLightPosition();
 
     // pozitia camerei pe sfera
     float camX = camDist * cos(camPitch) * cos(camYaw);
@@ -94,6 +105,12 @@ void display()
     gluLookAt(camX, camY, camZ,
         0, 0, 3,
         0, 0, 1);
+
+    // Dacă e world sun, setăm poziția luminii DUPĂ view (fixă în lume)
+    if (!g_useHeadlight)
+        applyLightPosition();
+
+    drawSun();
 
     // scena 3D principala (brad + radio)
     drawGround();
@@ -188,8 +205,8 @@ int main(int argc, char** argv)
     glutCreateWindow("Brad 3D dansator");
 
     glEnable(GL_DEPTH_TEST);
-    glClearColor(0.45f, 0.56f, 0.68f, 1.0f);
-
+    glClearColor(SKY_BG_RGBA[0], SKY_BG_RGBA[1], SKY_BG_RGBA[2], SKY_BG_RGBA[3]);
+    
     // lumina pentru intreaga scena (brad, radio, fulgi)
     setupLight();
 
