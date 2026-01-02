@@ -44,6 +44,8 @@ void playMusic();
 void setMusicVolume();
 void setMusicVolumeAttenuated(float dist);
 
+void initGroundTexture();
+void drawGroundTextured();
 void drawGround();
 void drawRadio();
 void drawTree();
@@ -113,7 +115,8 @@ void display()
     drawSun();
 
     // scena 3D principala (brad + radio)
-    drawGround();
+    //drawGround();
+    drawGroundTextured();
     drawRadio();
     drawTree();
     drawMusicNotes();
@@ -209,6 +212,9 @@ int main(int argc, char** argv)
     
     // lumina pentru intreaga scena (brad, radio, fulgi)
     setupLight();
+
+    // podea texturata
+    initGroundTexture();
 
     // muzica de fundal
     playMusic();

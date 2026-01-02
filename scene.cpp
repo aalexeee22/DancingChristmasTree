@@ -1,6 +1,7 @@
-﻿// scene.cpp
-#include <gl/freeglut.h>
+﻿#include <gl/freeglut.h>
 #include <cmath>
+#include "SOIL.h" 
+
 
 extern float camYaw, camPitch, camDist;
 extern float SKY_BG_RGBA[4];
@@ -11,6 +12,7 @@ extern float radioX, radioY, radioZ;
 extern float radioRadius, bradRadius;
 
 bool g_useHeadlight = true;
+static GLuint g_groundTex = 0;
 
 struct MusicNote
 {
@@ -169,6 +171,42 @@ void drawMilkySkyBackdrop()
     glPopAttrib();
 }
 
+void initGroundTexture()
+{
+    if (g_groundTex != 0) return; // deja încărcată
+
+    glGenTextures(1, &g_groundTex);
+    glBindTexture(GL_TEXTURE_2D, g_groundTex);
+
+    // repetare (tiling) pe ambele direcții
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    // filtrare (arată mai bine decât NEAREST pe sol mare)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    int width = 0, height = 0, channels = 0;
+
+    // alege imaginea
+    const char* path = "assets/pattern/realistic-snow.jpg";
+
+    // incarca imaginea
+    unsigned char* img = SOIL_load_image(path, &width, &height, &channels, SOIL_LOAD_RGBA);
+    if (!img)
+    {
+        // fallback: nu blocăm scena dacă lipsește fișierul
+        glBindTexture(GL_TEXTURE_2D, 0);
+        return;
+    }
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img);
+
+    SOIL_free_image_data(img);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 
 void drawGround()
 {
@@ -184,6 +222,49 @@ void drawGround()
 
     glEnable(GL_LIGHTING);
 }
+
+void drawGroundTextured()
+{
+    // Dacă textura nu e disponibilă, folosește solul vechi (fallback)
+    if (g_groundTex == 0)
+    {
+        drawGround();
+        return;
+    }
+
+    glPushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT);
+
+    // Ca să fie în ton cu scena, păstrăm fără iluminare, ca înainte.
+    glDisable(GL_LIGHTING);
+
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, g_groundTex);
+
+    // scadem contrastul pentru a nu iesi umbrele din imagine/pattern in evidenta
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glColor3f(0.92f, 0.93f, 0.96f);
+
+    // cat de des se repeta textura 
+    const float tile = 1.0f;
+
+
+    glBegin(GL_QUADS);
+
+    glNormal3f(0.0f, 0.0f, 1.0f);
+
+    glTexCoord2f(0.0f, 0.0f);      glVertex3f(-50.0f, -50.0f, 0.0f);
+    glTexCoord2f(tile, 0.0f);      glVertex3f(50.0f, -50.0f, 0.0f);
+    glTexCoord2f(tile, tile);      glVertex3f(50.0f, 50.0f, 0.0f);
+    glTexCoord2f(0.0f, tile);      glVertex3f(-50.0f, 50.0f, 0.0f);
+
+    glEnd();
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_TEXTURE_2D);
+
+    glPopAttrib();
+}
+
 
 void drawRadio()
 {
