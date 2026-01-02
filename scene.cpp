@@ -15,6 +15,7 @@ bool g_useHeadlight = true;
 struct MusicNote
 {
     float x, y, z;
+    float baseX;
     float phase;
     bool active;
     int type;   // 0 = doime ♩, 1 = optime ♪, 2 = saisprezecime ♬
@@ -382,7 +383,7 @@ void drawMusicNotes()
     }
 
     // SAISPREZECIME ♬ → două stegulețe
-    if (musicNote.type == 2)
+    if (musicNote.type >= 2)
     {
         glBegin(GL_TRIANGLES);
         glVertex3f(0.15f, 0.0f, 0.7f);
