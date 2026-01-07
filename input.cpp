@@ -58,12 +58,6 @@ void keySpecial(int key, int, int)
     if (key == GLUT_KEY_UP)    camPitch += 0.03f;
     if (key == GLUT_KEY_DOWN)  camPitch -= 0.03f;
 
-    if (key == GLUT_KEY_F1)
-    {
-        g_useHeadlight = !g_useHeadlight;
-        glutPostRedisplay();
-    }
-
     if (camPitch > 1.3f) camPitch = 1.3f;
     if (camPitch < -1.3f) camPitch = -1.3f;
 }

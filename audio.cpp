@@ -28,7 +28,7 @@ const char* songs[] =
 };
 
 int songCount = 3;
-int currentSong = 0;
+int currentSong = 2;
 
 // =======================
 // MINIAUDIO STATE
@@ -122,7 +122,7 @@ void playMusic()
     ma_sound_set_looping(&sound, MA_TRUE);
     setMusicVolume();
 
-    if (radioOn)               // 👈 IMPORTANT
+    if (radioOn)               // IMPORTANT
         ma_sound_start(&sound);
 }
 
@@ -152,7 +152,7 @@ void setMusicVolumeAttenuated(float dist)
 {
     if (!musicLoaded) return;
 
-    float factor = 1.0f / (1.0f + dist * 0.30f);
+    float factor = 1.0f / (1.0f + dist * 0.20f);
     float v = (volumeLevel / 100.0f) * factor;
 
     if (v < 0.0f) v = 0.0f;

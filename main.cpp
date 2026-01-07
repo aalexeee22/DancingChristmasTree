@@ -43,7 +43,6 @@ extern bool radioOn;
 
 void setupLight();
 void applyLightPosition();
-extern bool g_useHeadlight;   // folosit doar pentru if-uri (demo)
 
 void playMusic();
 void setMusicVolume();
@@ -100,9 +99,6 @@ void display()
     drawMilkySkyBackdrop(); // cer laptos (2D), nu afecteaza scena 3D
     glLoadIdentity();
 
-    // Dacă e headlight, setăm poziția luminii ACUM (înainte de view)
-    if (g_useHeadlight)
-        applyLightPosition();
 
     // pozitia camerei pe sfera
     float camX = camDist * cos(camPitch) * cos(camYaw);
@@ -113,14 +109,12 @@ void display()
         0, 0, 3,
         0, 0, 1);
 
-    // Dacă e world sun, setăm poziția luminii DUPĂ view (fixă în lume)
-    if (!g_useHeadlight)
-        applyLightPosition();
+    // setam pozitia luminii dupa view (fixa in lume)
+    applyLightPosition();
 
     drawSun();
 
     // scena 3D principala (brad + radio)
-    //drawGround();
     drawGroundTextured();
     drawRadio();
     drawTree();
@@ -163,9 +157,8 @@ void idle()
         }
     }
 
-    // =========================
+
     // AUDIO – DOAR DACĂ RADIO E ON
-    // =========================
     if (musicLoaded && radioOn)
     {
         float dx = bradX - radioX;
@@ -174,9 +167,7 @@ void idle()
         setMusicVolumeAttenuated(dist);
     }
 
-    // =========================
     // NOTE MUZICALE
-    // =========================
     if (!radioOn)
     {
         // radio OFF → fara note
@@ -220,8 +211,6 @@ void idle()
 
     glutPostRedisplay();
 }
-
-
 
 
 int main(int argc, char** argv)

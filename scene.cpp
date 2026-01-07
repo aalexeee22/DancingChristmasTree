@@ -11,8 +11,9 @@ extern float danceT;
 extern float radioX, radioY, radioZ;
 extern float radioRadius, bradRadius;
 
-bool g_useHeadlight = true;
 static GLuint g_groundTex = 0;
+// pozitia soarelui / sursei de lumina
+static GLfloat SUN_POS[] = { 0.0f, 18.0f, 22.0f, 1.0f }; // (x, y, z, w)
 
 struct MusicNote
 {
@@ -46,17 +47,13 @@ void setupLight()
     // OPTIONAL dar safe: ajută când scalezi obiecte (radio-ul)
     glEnable(GL_NORMALIZE);
 
-    GLfloat pos[] = { 5.0f, 5.0f, 10.0f, 1.0f };
-    //GLfloat pos[] = { 1.5f, 3.0f, 4.0f, 1.0f };
-    glLightfv(GL_LIGHT0, GL_POSITION, pos);
-
-    GLfloat diff[] = { 0.9f, 0.9f, 0.9f, 1.0f };
+    GLfloat diff[] = { 0.72f, 0.65f, 0.70f, 1.0f };
     glLightfv(GL_LIGHT0, GL_DIFFUSE, diff);
 
-    GLfloat amb[] = { 0.25f, 0.28f, 0.33f, 1.0f };
+    GLfloat amb[] = { 0.18f, 0.20f, 0.24f, 1.0f };
     glLightfv(GL_LIGHT0, GL_AMBIENT, amb);
 
-    GLfloat spec[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    GLfloat spec[] = { 0.27f, 0.27f, 0.27f, 1.0f };
     glLightfv(GL_LIGHT0, GL_SPECULAR, spec);
 
 
@@ -65,22 +62,8 @@ void setupLight()
 
 void applyLightPosition()
 {
-    // IMPORTANT:
-    // - dacă vrem headlight: apelăm funcția înainte de gluLookAt (modelview = identitate)
-    // - dacă vrem world sun: apelăm funcția după gluLookAt (modelview = view)
-    if (g_useHeadlight)
-    {
-        // Lumină direcțională dinspre cameră (w=0) – “lanternă pe cameră”
-        GLfloat dir[] = { 0.0f, 0.0f, 1.0f, 0.0f };
-        glLightfv(GL_LIGHT0, GL_POSITION, dir);
-    }
-    else
-    {
-        // Lumină punctuală fixă în lume (w=1) – “soare”/sursă în scenă
-        // Păstrează aici aceeași poziție pe care o folosiți ca "soare".
-        GLfloat pos[] = { 5.0f, 5.0f, 10.0f, 1.0f };
-        glLightfv(GL_LIGHT0, GL_POSITION, pos);
-    }
+        // lumina punctuala fixa in lume (w=1) – soare/sursa in scena
+        glLightfv(GL_LIGHT0, GL_POSITION, SUN_POS);
 }
 
 void drawSun()
@@ -100,14 +83,12 @@ void drawSun()
     glEnable(GL_FOG);
     glFogi(GL_FOG_MODE, GL_EXP2);
     glFogfv(GL_FOG_COLOR, SKY_BG_RGBA);
-    glFogf(GL_FOG_DENSITY, 0.016f);
+    glFogf(GL_FOG_DENSITY, 0.017f);
 
     glPushMatrix();
 
-    if (g_useHeadlight)
-        glTranslatef(-20.0f, -15.0f, 18.0f);
-    else
-        glTranslatef(18.0f, -12.0f, 22.0f);
+    // pozitia soarelui
+    glTranslatef(SUN_POS[0], SUN_POS[1], SUN_POS[2]);
 
     // creare efect de halo
     // nucleul (mai luminos)
@@ -298,9 +279,8 @@ void drawRadio()
     glEnd();
     glEnable(GL_LIGHTING);
 
-    // =====================
-// BUTOANE RADIO – PE FAȚA REALĂ
-// =====================
+    
+    // BUTOANE RADIO – PE FAȚA REALĂ
     glDisable(GL_LIGHTING);
 
     float frontY = radioY + 0.76f;
