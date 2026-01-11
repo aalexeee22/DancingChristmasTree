@@ -1,4 +1,3 @@
-// ui.cpp
 #include <gl/freeglut.h>
 
 extern int winW, winH;
@@ -11,6 +10,8 @@ void setMusicVolume();
 
 void drawSoundBar()
 {
+    // dezactivam iluminarea si testul de adancime
+    // deoarece desenam un element 2D peste scena 3D
     glDisable(GL_LIGHTING);
     glDisable(GL_DEPTH_TEST);
 
@@ -37,7 +38,7 @@ void drawSoundBar()
     glVertex2i(x0, y1);
     glEnd();
 
-    float frac = volumeLevel / 100.0f;
+    float frac = volumeLevel / 100.0f;// procent volum
     int xFill = x0 + int(barWidth * frac);
 
     glColor3f(0.0f, 0.4f, 0.0f);
@@ -73,6 +74,8 @@ bool isInsideSoundBar(int mx, int my)
     int x1 = x0 + barWidth;
     int y1 = y0 + barHeight;
 
+    // convertim coordonata Y din sistemul mouse-ului
+    // (0 sus) in sistem OpenGL (0 jos)
     int yGL = my;
     return (mx >= x0 && mx <= x1 && (winH - yGL) >= y0 && (winH - yGL) <= y1);
 }
@@ -91,5 +94,5 @@ void updateVolumeFromMouse(int mx, int /*my*/)
     if (volumeLevel < 0) volumeLevel = 0;
     if (volumeLevel > 100) volumeLevel = 100;
 
-    setMusicVolume();
+    setMusicVolume();// aplicam volumul in sistemul audio
 }

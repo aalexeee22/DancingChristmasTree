@@ -1,4 +1,4 @@
-﻿// Contine toate constantele globale
+﻿// contine toate constantele globale
 
 // culoare fundal – RGBA
 float SKY_BG_RGBA[4] = { 0.45f, 0.56f, 0.68f, 1.0f };
@@ -35,7 +35,7 @@ int winW = 900;
 int winH = 700;
 bool dragVolume = false;
 
-// IMPORTANT: const globale între fișiere => definire cu external linkage
+// const globale intre fisiere => definire cu external linkage
 extern const int barWidth = 160;
 extern const int barHeight = 18;
 

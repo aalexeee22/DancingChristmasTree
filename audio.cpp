@@ -1,5 +1,4 @@
-﻿// audio.cpp
-#define MINIAUDIO_IMPLEMENTATION
+﻿#define MINIAUDIO_IMPLEMENTATION
 #include "miniaudio.h"
 
 #include <iostream>
@@ -10,16 +9,12 @@ using std::string;
 using std::cout;
 using std::endl;
 
-// =======================
-// VARIABILE EXTERNE
-// =======================
+// variabile externe
 extern int volumeLevel;   // 0..100
 extern bool musicLoaded;
 extern bool radioOn;
 
-// =======================
-// PLAYLIST
-// =======================
+// playlist
 const char* songs[] =
 {
     "assets/sounds/audio1.mp3",
@@ -30,16 +25,11 @@ const char* songs[] =
 int songCount = 3;
 int currentSong = 2;
 
-// =======================
-// MINIAUDIO STATE
-// =======================
+// miniaudio state
 static ma_engine engine;
 static ma_sound sound;
 static bool engineInitialized = false;
 
-// =======================
-// INIT ENGINE (ONCE)
-// =======================
 static void initAudio()
 {
     if (engineInitialized)
@@ -79,10 +69,6 @@ void toggleRadio()
     }
 }
 
-
-// =======================
-// SET VOLUME (SAFE)
-// =======================
 void setMusicVolume()
 {
     if (!musicLoaded) return;
@@ -91,9 +77,6 @@ void setMusicVolume()
     ma_sound_set_volume(&sound, v);
 }
 
-// =======================
-// PLAY MUSIC
-// =======================
 
 void playMusic()
 {
@@ -122,14 +105,12 @@ void playMusic()
     ma_sound_set_looping(&sound, MA_TRUE);
     setMusicVolume();
 
-    if (radioOn)               // IMPORTANT
+    if (radioOn)             
         ma_sound_start(&sound);
 }
 
 
-// =======================
-// NEXT / PREV
-// =======================
+// next/prev cantec
 void nextSong()
 {
     currentSong = (currentSong + 1) % songCount;
@@ -145,9 +126,7 @@ void prevSong()
     playMusic();
 }
 
-// =======================
-// DISTANCE ATTENUATION (REAL, NO DISTORTION)
-// =======================
+// volum atenuat in functie de distanta
 void setMusicVolumeAttenuated(float dist)
 {
     if (!musicLoaded) return;

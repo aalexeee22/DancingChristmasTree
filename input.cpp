@@ -1,5 +1,4 @@
-﻿// input.cpp
-#include <gl/freeglut.h>
+﻿#include <gl/freeglut.h>
 #include <vector>
 #include <cmath>
 extern float camYaw, camPitch;
@@ -84,7 +83,7 @@ bool clickOnRadioButton(int x, int y, bool& isNext)
     if (fabs(dirY) < 1e-6)
         return false;
 
-    // PLANUL FEȚEI RADIO-ULUI (−Y)
+    // planul fetei radioului (−Y)
     double yPlane = radioY + 0.76;
     double t = (yPlane - ny) / dirY;
     if (t < 0.0)
@@ -93,9 +92,9 @@ bool clickOnRadioButton(int x, int y, bool& isNext)
     double ix = nx + dirX * t;
     double iz = nz + dirZ * t;
 
-    double buttonZ = radioZ + 1.0 + 0.02;  // EXACT ca în scene.cpp
+    double buttonZ = radioZ + 1.0 + 0.02;  // exact ca în scene.cpp
 
-    // PREV ⏮ (stânga)
+    // PREV << (stanga)
     if (fabs(ix - (radioX - 0.5)) < 0.35 &&
         fabs(iz - buttonZ) < 0.35)
     {
@@ -103,7 +102,7 @@ bool clickOnRadioButton(int x, int y, bool& isNext)
         return true;
     }
 
-    // NEXT ⏭ (dreapta)
+    // NEXT >> (dreapta)
     if (fabs(ix - (radioX + 0.5)) < 0.35 &&
         fabs(iz - buttonZ) < 0.35)
     {
@@ -115,7 +114,7 @@ bool clickOnRadioButton(int x, int y, bool& isNext)
 }
 
 
-// ===== helpers: ray -> plane intersection =====
+// ===== helpers: ray -> intersectia planelor =====
 static bool getMouseRayIntersectionPlaneY(
     int x, int y,
     double yPlane,
@@ -188,7 +187,7 @@ static bool getMouseRayIntersectionPlaneX(
     return true;
 }
 
-// ===== hit tests =====
+// testare apasare buton
 static bool hitPrevNextOnFront(double ix, double iz, bool& isNext)
 {
     double buttonZ = radioZ + 1.0 + 0.02; // exact ca in scene.cpp
@@ -235,7 +234,7 @@ void mouse(int button, int state, int x, int y)
         // 1) POWER: intersecție cu planul lateral (X = radioX + 1.15)
         {
             double ix, iy, iz;
-            double xPlane = radioX + 1.15; // exact unde desenezi torus-ul
+            double xPlane = radioX + 1.15; // exact unde se deseneaza torul
 
             if (getMouseRayIntersectionPlaneX(x, y, xPlane, ix, iy, iz))
             {
@@ -247,7 +246,7 @@ void mouse(int button, int state, int x, int y)
             }
         }
 
-        // 2) PREV/NEXT: intersecție cu planul feței (Y = radioY + 0.76)
+        // 2) PREV/NEXT: intersecție cu planul fetei (Y = radioY + 0.76)
         {
             double ix, iy, iz;
             double yPlane = radioY + 0.76;

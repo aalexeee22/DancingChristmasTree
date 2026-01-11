@@ -44,7 +44,6 @@ void setupLight()
     glEnable(GL_LIGHT0);
     glEnable(GL_COLOR_MATERIAL);
 
-    // OPTIONAL dar safe: ajută când scalezi obiecte (radio-ul)
     glEnable(GL_NORMALIZE);
 
     GLfloat diff[] = { 0.72f, 0.65f, 0.70f, 1.0f };
@@ -155,16 +154,16 @@ void drawMilkySkyBackdrop()
 
 void initGroundTexture()
 {
-    if (g_groundTex != 0) return; // deja încărcată
+    if (g_groundTex != 0) return; // deja incarcata
 
     glGenTextures(1, &g_groundTex);
     glBindTexture(GL_TEXTURE_2D, g_groundTex);
 
-    // repetare (tiling) pe ambele direcții
+    // repetare (tiling) pe ambele directii
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    // filtrare (arată mai bine decât NEAREST pe sol mare)
+    // filtrare (arata mai bine decat NEAREST pe sol mare)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -177,7 +176,7 @@ void initGroundTexture()
     unsigned char* img = SOIL_load_image(path, &width, &height, &channels, SOIL_LOAD_RGBA);
     if (!img)
     {
-        // fallback: nu blocăm scena dacă lipsește fișierul
+        // fallback: nu blocăm scena dacă lipseste fisierul
         glBindTexture(GL_TEXTURE_2D, 0);
         return;
     }
@@ -207,7 +206,7 @@ void drawGround()
 
 void drawGroundTextured()
 {
-    // Dacă textura nu e disponibilă, folosește solul vechi (fallback)
+    // daca textura nu e disponibila, foloseste solul vechi (fallback)
     if (g_groundTex == 0)
     {
         drawGround();
@@ -216,7 +215,7 @@ void drawGroundTextured()
 
     glPushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT | GL_CURRENT_BIT | GL_LIGHTING_BIT);
 
-    // Ca să fie în ton cu scena, păstrăm fără iluminare, ca înainte.
+    // ca sa fie in ton cu scena, pastram fara iluminare, ca inainte
     glDisable(GL_LIGHTING);
 
     glEnable(GL_TEXTURE_2D);
@@ -280,13 +279,13 @@ void drawRadio()
     glEnable(GL_LIGHTING);
 
     
-    // BUTOANE RADIO – PE FAȚA REALĂ
+    // butoane radio
     glDisable(GL_LIGHTING);
 
     float frontY = radioY + 0.76f;
-    float buttonZ = radioZ + 1.0f + 0.02f; // scoase PUȚIN în afară
+    float buttonZ = radioZ + 1.0f + 0.02f; // scoase putin in afara
 
-    // PREV ⏮
+    // PREV <<
     glPushMatrix();
     glTranslatef(radioX - 0.5f, frontY, buttonZ);
     glColor3f(0.9f, 0.2f, 0.2f);
@@ -297,7 +296,7 @@ void drawRadio()
     glEnd();
     glPopMatrix();
 
-    // NEXT ⏭
+    // NEXT >>
     glPushMatrix();
     glTranslatef(radioX + 0.5f, frontY, buttonZ);
     glColor3f(0.2f, 0.9f, 0.2f);
@@ -473,7 +472,7 @@ void drawMusicNotes()
     glDisable(GL_LIGHTING);
     glColor3f(0.0f, 0.0f, 0.0f);
 
-    // cap notă
+    // cap nota
     glutSolidSphere(0.18f, 16, 16);
 
     // tija
@@ -482,7 +481,7 @@ void drawMusicNotes()
     glVertex3f(0.15f, 0.0f, 0.9f);
     glEnd();
 
-    // OPTIME ♪ → un steguleț
+    // OPTIME ♪ -> un steguleț
     if (musicNote.type >= 1)
     {
         glBegin(GL_TRIANGLES);
@@ -492,7 +491,7 @@ void drawMusicNotes()
         glEnd();
     }
 
-    // SAISPREZECIME ♬ → două stegulețe
+    // SAISPREZECIME ♬ -> două stegulețe
     if (musicNote.type >= 2)
     {
         glBegin(GL_TRIANGLES);

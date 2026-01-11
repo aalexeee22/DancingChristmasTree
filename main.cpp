@@ -1,5 +1,4 @@
-﻿// main.cpp
-#include <algorithm>
+﻿#include <algorithm>
 #include <gl/freeglut.h>
 #include <cmath>
 #include <string>
@@ -75,7 +74,7 @@ void spawnMusicNote()
 {
     if (musicNote.active) return;
 
-    // offset mic diferit pentru fiecare notă
+    // offset mic diferit pentru fiecare nota
     float offset = ((rand() % 100) / 100.0f - 0.5f) * 0.6f;
 
     musicNote.x = radioX + offset;
@@ -96,7 +95,7 @@ void spawnMusicNote()
 void display()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    drawMilkySkyBackdrop(); // cer laptos (2D), nu afecteaza scena 3D
+    drawMilkySkyBackdrop(); // cer laptos (2D)
     glLoadIdentity();
 
 
@@ -158,7 +157,7 @@ void idle()
     }
 
 
-    // AUDIO – DOAR DACĂ RADIO E ON
+	// AUDIO – doar daca radioul e pornit
     if (musicLoaded && radioOn)
     {
         float dx = bradX - radioX;
@@ -167,15 +166,15 @@ void idle()
         setMusicVolumeAttenuated(dist);
     }
 
-    // NOTE MUZICALE
+    // note muzicale
     if (!radioOn)
     {
-        // radio OFF → fara note
+        // radio OFF -> fara note
         musicNote.active = false;
     }
     else
     {
-        // spawn notă
+        // generare nota
         if (!musicNote.active)
         {
             noteCooldown++;
@@ -194,7 +193,7 @@ void idle()
         }
         else
         {
-            // miscare notă
+            // miscare nota
             musicNote.z += 0.01f;
 
             musicNote.phase += 0.03f;
@@ -237,7 +236,7 @@ int main(int argc, char** argv)
     initSnow();
 
     glutReshapeFunc(reshape);
-    reshape(winW, winH); // asigură proiecția de la start (safe)
+    reshape(winW, winH); // asigura proiectia de la start (safe)
 
     glutDisplayFunc(display);
     glutIdleFunc(idle);
