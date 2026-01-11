@@ -114,7 +114,7 @@ bool clickOnRadioButton(int x, int y, bool& isNext)
 }
 
 
-// ===== helpers: ray -> intersectia planelor =====
+// helpers: ray -> intersectia planelor 
 static bool getMouseRayIntersectionPlaneY(
     int x, int y,
     double yPlane,
@@ -216,7 +216,7 @@ static bool hitPowerOnRightSide(double iy, double iz)
         fabs(iz - (radioZ + 1.0)) < 0.35;
 }
 
-// ===== mouse =====
+// mouse 
 void mouse(int button, int state, int x, int y)
 {
     if (button != GLUT_LEFT_BUTTON) return;
