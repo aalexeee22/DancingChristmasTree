@@ -12,8 +12,8 @@ extern float radioX, radioY, radioZ;
 extern float radioRadius, bradRadius;
 
 static GLuint g_groundTex = 0;
-// pozitia soarelui / sursei de lumina
-static GLfloat SUN_POS[] = { 0.0f, 18.0f, 22.0f, 1.0f }; // (x, y, z, w)
+// pozitia soarelui / sursei de lumina directionala
+static GLfloat SUN_POS[] = { 0.0f, 18.0f, 22.0f, 0.0f }; // (x, y, z, w)
 
 struct MusicNote
 {
@@ -52,7 +52,7 @@ void setupLight()
     GLfloat amb[] = { 0.18f, 0.20f, 0.24f, 1.0f };
     glLightfv(GL_LIGHT0, GL_AMBIENT, amb);
 
-    GLfloat spec[] = { 0.27f, 0.27f, 0.27f, 1.0f };
+    GLfloat spec[] = { 0.12f, 0.12f, 0.12f, 1.0f };
     glLightfv(GL_LIGHT0, GL_SPECULAR, spec);
 
 
@@ -61,7 +61,7 @@ void setupLight()
 
 void applyLightPosition()
 {
-        // lumina punctuala fixa in lume (w=1) – soare/sursa in scena
+        // soare/sursa in scena
         glLightfv(GL_LIGHT0, GL_POSITION, SUN_POS);
 }
 

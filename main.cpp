@@ -108,7 +108,8 @@ void display()
         0, 0, 3,
         0, 0, 1);
 
-    // setam pozitia luminii dupa view (fixa in lume)
+    // setam pozitia luminii
+    // directia luminii se mentine fixa in raport cu spatiul lumii
     applyLightPosition();
 
     drawSun();
